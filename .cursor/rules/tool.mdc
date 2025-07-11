@@ -1,0 +1,205 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+### Project structure
+
+```
+your_plugin/
+├── _assets/             # Icons and visual resources
+├── provider/            # Provider definitions and validation
+│   ├── your_plugin.py   # Credential validation logic
+│   └── your_plugin.yaml # Provider configuration
+├── tools/               # Tool implementations
+│   ├── feature_one.py   # Tool functionality implementation
+│   ├── feature_one.yaml # Tool parameters and description
+│   ├── feature_two.py   # Another tool implementation
+│   └── feature_two.yaml # Another tool configuration
+├── utils/               # Helper functions
+│   └── helpers.py       # Common functionality logic
+├── .env.example         # Environment variable template
+├── main.py              # Entry file
+├── manifest.yaml        # Main plugin configuration
+├── README.md            # Documentation
+├── PRIVACY.md           # PRIVACY
+└── requirements.txt     # Dependency list
+```
+
+
+### Core Principles of File Organization
+
+1. One Tool Class Per File, Example: tools/encrypt.py can only contain the EncryptTool class, not both EncryptTool and DecryptTool
+2. One yaml config Per tool
+3. provider/your_plugin.yaml must contains all the tools config yaml
+4. manifest.yaml must contains provider/your_plugin.yaml
+5. you need to supply some content to the README.md and PRIVACY.md
+
+### Example
+I added some examples, and the comments in the code examples is explain for you how it works, you don't need this comments when you generate.
+
+```manifest.yaml
+version: 0.0.1
+type: plugin
+author: your_name
+name: your_plugin_name
+label:
+    en_US: Your Plugin Display Name
+    zh_Hans: Your Plugin Display Name in Chinese
+description:
+    en_US: Detailed description of your plugin functionality
+    zh_Hans: Detailed description of your plugin functionality in Chinese
+icon: icon.svg
+resource:
+    memory: 268435456
+    permission: {}
+plugins:
+    tools:
+        - provider/your_plugin.yaml
+meta:
+    version: 0.0.1
+    arch:
+        - amd64
+        - arm64
+    runner:
+        language: python
+        version: '3.12'
+        entrypoint: main
+created_at: 2025-04-19T00:00:00.000000+08:00
+privacy: PRIVACY.md
+```
+
+```provider/your_plugin.yaml
+identity:
+    author: your_name
+    name: your_plugin_name
+    label:
+        en_US: Your Plugin Display Name
+        zh_Hans: Your Plugin Display Name in Chinese
+    description:
+        en_US: Detailed description of your plugin functionality
+        zh_Hans: Detailed description of your plugin functionality in Chinese
+    icon: icon.svg
+credentials_for_provider: # Only add when API keys or other credentials are needed
+    api_key:
+        type: secret-input
+        required: true
+        label:
+            en_US: API Key
+            zh_Hans: API Key in Chinese
+        placeholder:
+            en_US: Enter your API key
+            zh_Hans: Enter your API key in Chinese
+        help:
+            en_US: How to get your API key
+            zh_Hans: How to get your API key in Chinese
+        url: https://example.com/get-api-key
+tools: # Tool list, update here when adding new tools
+    - tools/feature_one.yaml
+    - tools/feature_two.yaml
+extra:
+    python:
+        source: provider/your_plugin.py
+```
+
+```provider/your_plugin.py
+from typing import Any
+
+from dify_plugin import ToolProvider
+from dify_plugin.errors.tool import ToolProviderCredentialValidationError
+
+
+class MarkdownToDocProvider(ToolProvider):
+    def _validate_credentials(self, credentials: dict[str, Any]) -> None:
+        try:
+            """
+            implement your validations here, if don't require validation, you can leave it empty.
+            """
+        except Exception as e:
+            raise ToolProviderCredentialValidationError(str(e))
+```
+
+```tools/feature_one.yaml
+identity:
+    name: feature_name # Corresponds to file name
+    author: your_name
+    label:
+        en_US: Feature Display Name
+        zh_Hans: Feature Display Name in Chinese
+description:
+    human: # Description for human users
+        en_US: Description for human users
+        zh_Hans: Description for human users in Chinese
+    llm: Description for AI models to understand when to use this tool. # Description for AI
+parameters: # Parameter definitions
+    - name: param_name
+      type: string # string、number、boolean、select、secret-input、file、files、model-selector、app-selector
+      required: true
+      label:
+          en_US: Parameter Display Name
+          zh_Hans: Parameter Display Name in Chinese
+      human_description:
+          en_US: Parameter description for users
+          zh_Hans: Parameter description for users in Chinese
+      llm_description: Detailed parameter description for AI models
+      form: llm # llm indicates it can be extracted by AI from user input, form indicates it needs to be configured in UI
+    - name: select_params_example
+      type: select
+      required: false
+      label:
+          en_US: Parameter Display Name
+          zh_Hans: Parameter Display Name in Chinese
+      human_description:
+          en_US: Parameter description for users
+          zh_Hans: Parameter description for users in Chinese
+      options:
+        - value: gpt-4o-mini
+          label:
+            en_US: GPT-4o-mini
+        - value: claude-3-haiku
+          label:
+            en_US: Claude 3
+      form: form
+    # Other parameters...
+extra:
+    python:
+        source: tools/feature.py # Corresponding Python implementation file
+```
+
+```tools/feature.py
+from collections.abc import Generator
+from typing import Any
+
+from dify_plugin import Tool
+from dify_plugin.entities.tool import ToolInvokeMessage
+
+class FeatureTool(Tool):
+    def _invoke(self, tool_parameters: dict[str, Any]) -> Generator[ToolInvokeMessage, None, None]:
+        try:
+            # 1. Get parameters defined in tool
+            param = tool_parameters.get("param_name", "")
+
+            # 2. Get parameters defined in provider(optional)
+            api_key=self.runtime.credentials["api_key"]
+
+            # 3. Implement business logic
+            result = self.my_process_data(param, optional_param1, optional_param2)
+
+            # 4. Return results
+            # Text output
+            yield self.create_text_message(f"Processed result: {result}")
+            # JSON output, result should be a dict
+            yield self.create_json_message({"result": result})
+            # File output, result should be a blob object
+            yield self.create_blob_message(blob=result, meta={"mime_type": "video/mp4", "file_name":"custom.mp4"})
+
+        except Exception as e:
+            # Error handling
+            yield self.create_text_message(f"Error: {str(e)}")
+```
+
+```requirements.txt
+# the dify_plugin contains Flask,Werkzeug,dpkt,gevent,httpx,pydantic_settings,pydantic,pyyaml,requests,socksio,tiktoken,yarl,packaging
+dify_plugin>=0.3.0,<0.5.0
+```
+

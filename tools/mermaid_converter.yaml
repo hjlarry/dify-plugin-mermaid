@@ -1,0 +1,99 @@
+identity:
+  name: "mermaid_converter"
+  author: "hjlarry"
+  label:
+    en_US: "Mermaid Converter"
+    zh_Hans: "Mermaid 转换器"
+    pt_BR: "Conversor Mermaid"
+description:
+  human:
+    en_US: "Renders Mermaid diagram syntax into various formats like PNG, SVG, or PDF."
+    zh_Hans: "将 Mermaid 图表语法渲染成 PNG, SVG, 或 PDF 等多种格式的文件。"
+    pt_BR: "Renderiza a sintaxe do diagrama Mermaid em vários formatos como PNG, SVG ou PDF."
+  llm: "This tool renders Mermaid diagram syntax into a specified format (PNG, SVG, or PDF), with optional theme and background color."
+parameters:
+  - name: mermaid_code
+    type: string
+    required: true
+    label:
+      en_US: "Mermaid Code"
+      zh_Hans: "Mermaid 代码"
+      pt_BR: "Código Mermaid"
+    human_description:
+      en_US: "The Mermaid diagram syntax to be rendered."
+      zh_Hans: "需要渲染的 Mermaid 图表语法。"
+      pt_BR: "A sintaxe do diagrama Mermaid a ser renderizada."
+    llm_description: "The user-provided Mermaid diagram syntax that needs to be rendered."
+    form: llm
+  - name: format
+    type: select
+    required: false
+    default: "png"
+    options:
+      - value: "png"
+        label:
+          en_US: "PNG"
+          zh_Hans: "PNG"
+      - value: "svg"
+        label:
+          en_US: "SVG"
+          zh_Hans: "SVG"
+      - value: "pdf"
+        label:
+          en_US: "PDF"
+          zh_Hans: "PDF"
+    label:
+      en_US: "Output Format"
+      zh_Hans: "输出格式"
+    human_description:
+      en_US: "The output format for the diagram. Can be png, svg, or pdf."
+      zh_Hans: "图表的输出格式。可以是 png, svg, 或 pdf。"
+    llm_description: "The desired output format for the Mermaid diagram."
+    form: form
+  - name: theme
+    type: select
+    required: false
+    default: "default"
+    options:
+      - value: "default"
+        label:
+          en_US: "Default"
+          zh_Hans: "默认"
+      - value: "dark"
+        label:
+          en_US: "Dark"
+          zh_Hans: "暗色"
+      - value: "neutral"
+        label:
+          en_US: "Neutral"
+          zh_Hans: "中性"
+      - value: "forest"
+        label:
+          en_US: "Forest"
+          zh_Hans: "森林"
+      - value: "base"
+        label:
+          en_US: "Base"
+          zh_Hans: "基础"
+    label:
+      en_US: "Theme"
+      zh_Hans: "主题"
+    human_description:
+      en_US: "The theme for the diagram. Available themes: default, dark, neutral, forest, base."
+      zh_Hans: "图表的主题。可用主题: default, dark, neutral, forest, base."
+    llm_description: "The visual theme to apply to the Mermaid diagram."
+    form: form
+  - name: bg_color
+    type: string
+    required: false
+    label:
+      en_US: "Background Color"
+      zh_Hans: "背景颜色"
+    human_description:
+      en_US: "The background color for the diagram (e.g., 'white', '#FFFFFF')."
+      zh_Hans: "图表的背景颜色 (例如, 'white', '#FFFFFF')。"
+    llm_description: "A custom background color for the diagram."
+    form: form
+extra:
+  python:
+    source: tools/mermaid_converter.py 

@@ -1,0 +1,36 @@
+version: 0.0.1
+type: plugin
+author: hjlarry
+name: mermaid_converter
+label:
+  en_US: Mermaid Converter
+  ja_JP: Mermaid Converter
+  zh_Hans: Mermaid 转换器
+  pt_BR: Mermaid Converter
+description:
+  en_US: A tool to convert Mermaid code to various document formats.
+  ja_JP: A tool to convert Mermaid code to various document formats.
+  zh_Hans: 一个能将 Mermaid 代码转换为多种文档格式的工具。
+  pt_BR: A tool to convert Mermaid code to various document formats.
+icon: icon.svg
+resource:
+  memory: 268435456
+  permission:
+    tool:
+      enabled: true
+plugins:
+  tools:
+    - provider/mermaid_provider.yaml
+meta:
+  version: 0.0.1
+  arch:
+    - amd64
+    - arm64
+  runner:
+    language: python
+    version: "3.12"
+    entrypoint: main
+  minimum_dify_version: null
+created_at: 2025-07-08T14:05:39.67205354+08:00
+privacy: PRIVACY.md
+verified: false
