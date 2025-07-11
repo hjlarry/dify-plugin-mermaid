@@ -1,8 +1,9 @@
 ## Mermaid Converter
 
-**Author:** hjlarry
-**Version:** 0.0.1
-**Type:** tool
+**Author:** hjlarry  
+**Version:** 0.0.1  
+**Type:** tool  
+**Repo:** https://github.com/hjlarry/dify-plugin-mermaid
 
 ### Description
 
@@ -29,92 +30,15 @@ A Dify plugin that converts Mermaid diagram code to images in multiple formats (
 
 ### Usage Examples
 
-#### Basic Flowchart
-```mermaid
-graph TD
-    A[Start] --> B{Decision}
-    B -->|Yes| C[Process]
-    B -->|No| D[End]
-    C --> D
-```
+The converter config:
+![1](./_assets/1.png)
 
-**Parameters:**
-- `mermaid_code`: `graph TD\n    A[Start] --> B{Decision}\n    B -->|Yes| C[Process]\n    B -->|No| D[End]\n    C --> D`
-- `output_format`: `png`
+Here I create a workflow and ask the LLM to generate a git common operation mindmap by mermaid code:
 
-#### Sequence Diagram with Dark Theme
-```mermaid
-sequenceDiagram
-    participant A as Alice
-    participant B as Bob
-    A->>B: Hello Bob, how are you?
-    B-->>A: Great!
-```
+![2](./_assets/2.png)
 
-**Parameters:**
-- `mermaid_code`: `sequenceDiagram\n    participant A as Alice\n    participant B as Bob\n    A->>B: Hello Bob, how are you?\n    B-->>A: Great!`
-- `output_format`: `png`
-- `theme`: `dark`
-- `background_color`: `!white`
-
-#### Class Diagram as SVG
-```mermaid
-classDiagram
-    class Animal {
-        +String name
-        +makeSound()
-    }
-    class Dog {
-        +bark()
-    }
-    Animal <|-- Dog
-```
-
-**Parameters:**
-- `mermaid_code`: `classDiagram\n    class Animal {\n        +String name\n        +makeSound()\n    }\n    class Dog {\n        +bark()\n    }\n    Animal <|-- Dog`
-- `output_format`: `svg`
-
-#### PDF Output with Custom Size
-**Parameters:**
-- `mermaid_code`: `graph LR\n    A --> B --> C`
-- `output_format`: `pdf`
-- `width`: `800`
-- `height`: `600`
-
-### Background Color Options
-
-- **Hex Colors**: Use 6-digit hex codes (e.g., `FF0000` for red, `00FF00` for green)
-- **Named Colors**: Use exclamation prefix (e.g., `!white`, `!black`, `!gray`)
-- **Transparent**: Leave empty for transparent background
-
-### Supported Mermaid Diagram Types
-
-- Flowcharts (`graph`)
-- Sequence Diagrams (`sequenceDiagram`)
-- Class Diagrams (`classDiagram`)
-- State Diagrams (`stateDiagram`)
-- Entity Relationship Diagrams (`erDiagram`)
-- User Journey (`journey`)
-- Gantt Charts (`gantt`)
-- Pie Charts (`pie`)
-- Git Graphs (`gitgraph`)
-
-### Error Handling
-
-The plugin handles various error scenarios:
-
-- **Invalid Mermaid Syntax**: Returns clear error message with syntax validation
-- **API Timeouts**: 30-second timeout with retry logic
-- **Large Diagrams**: Detects diagrams too large for the API
-- **Network Issues**: Graceful handling of connection problems
-
-### Technical Details
-
-- **API Service**: Uses mermaid.ink public API
-- **Authentication**: No API key required
-- **Rate Limiting**: Respects mermaid.ink service limits
-- **Timeout**: 30-second request timeout
-- **Image Quality**: High-quality output in all supported formats
+The final result:
+![3](./_assets/3.png)
 
 ### Troubleshooting
 

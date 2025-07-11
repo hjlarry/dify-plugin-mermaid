@@ -2,6 +2,7 @@ import base64
 import logging
 from collections.abc import Generator
 from typing import Any
+from urllib.parse import urlencode
 
 import requests
 from dify_plugin import Tool
@@ -65,7 +66,7 @@ class MermaidConverterTool(Tool):
             
             # CRITICAL: Base64 encode the mermaid code
             try:
-                encoded_diagram = base64.b64encode(mermaid_code.encode('utf-8')).decode('utf-8')
+                encoded_diagram = base64.urlsafe_b64encode(mermaid_code.encode('utf-8')).decode('ascii')
             except Exception as e:
                 yield self.create_text_message(f"Error: Failed to encode diagram: {str(e)}")
                 return
@@ -73,11 +74,11 @@ class MermaidConverterTool(Tool):
             # PATTERN: Build URL based on format
             url = self._build_api_url(encoded_diagram, output_format, theme, background_color, width, height)
             
-            logger.info(f"Making request to mermaid.ink API")
+            logger.info(f"Making request to {url}")
             
             # CRITICAL: HTTP request with timeout
             try:
-                response = requests.get(url, timeout=30)
+                response = requests.get(url)
                 
                 if response.status_code != 200:
                     if response.status_code == 400:
@@ -156,35 +157,35 @@ class MermaidConverterTool(Tool):
             base_url = f"https://mermaid.ink/img/{encoded_diagram}"
         
         # Build query parameters
-        params = []
+        params = {}
         
         # Format-specific parameters
         if output_format in ["png", "jpg", "jpeg"]:
-            params.append(f"type={output_format}")
+            params["type"] = output_format
             
         # Theme parameter (only for image formats, not SVG/PDF)
         if theme and theme != "default" and output_format in ["png", "jpg", "jpeg"]:
-            params.append(f"theme={theme}")
+            params["theme"] = theme
         
         # Background color parameter
         if background_color:
             # Support both hex colors (FF0000) and named colors (!white)
             if background_color.startswith("!"):
-                params.append(f"bgColor={background_color}")
+                params["bgColor"] = background_color
             else:
                 # Remove # if present and ensure it's a valid hex color
                 color = background_color.lstrip("#")
                 if len(color) == 6 and all(c in "0123456789ABCDEFabcdef" for c in color):
-                    params.append(f"bgColor={color}")
+                    params["bgColor"] = color
         
         # Size parameters
         if width:
-            params.append(f"width={width}")
+            params["width"] = str(width)
         if height:
-            params.append(f"height={height}")
+            params["height"] = str(height)
         
         # Combine URL with parameters
         if params:
-            return f"{base_url}?{'&'.join(params)}"
+            return f"{base_url}?{urlencode(params)}"
         else:
             return base_url

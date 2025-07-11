@@ -14,4 +14,4 @@ tools:
   - tools/mermaid_converter.yaml
 extra:
   python:
-    source: provider/mermaid_converter.py
+    source: provider/mermaid_provider.py

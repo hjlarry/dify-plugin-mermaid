@@ -20,7 +20,7 @@ resource:
       enabled: true
 plugins:
   tools:
-    - provider/mermaid_converter.yaml
+    - provider/mermaid_provider.yaml
 meta:
   version: 0.0.1
   arch:
