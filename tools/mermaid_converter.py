@@ -2,7 +2,6 @@ import base64
 import logging
 from collections.abc import Generator
 from typing import Any
-from urllib.parse import urlencode
 
 import requests
 from dify_plugin import Tool
@@ -15,67 +14,177 @@ logger.addHandler(plugin_logger_handler)
 
 
 class MermaidConverterTool(Tool):
-    def _invoke(
-        self, tool_parameters: dict[str, Any]
-    ) -> Generator[ToolInvokeMessage, None, None]:
-        """
-        Invoke the tool to convert Mermaid code to an image.
-        """
-        logger.info(f"Invoking MermaidConverterTool with parameters: {tool_parameters}")
-        mermaid_code = tool_parameters.get("mermaid_code")
-        if not mermaid_code:
-            yield self.create_text_message("No Mermaid code provided.")
-            return
+    """
+    Converts Mermaid diagram code to images using the mermaid.ink API service.
+    
+    Supports multiple output formats: PNG, JPG, SVG, PDF
+    Includes theme support and customization options.
+    """
 
-        output_format = tool_parameters.get("format", "png")
-        theme = tool_parameters.get("theme")
-        bg_color = tool_parameters.get("bg_color")
-
+    def _invoke(self, tool_parameters: dict[str, Any]) -> Generator[ToolInvokeMessage]:
+        """
+        Convert Mermaid diagram code to image.
+        
+        Args:
+            tool_parameters: Dictionary containing:
+                - mermaid_code (str, required): The Mermaid diagram syntax
+                - output_format (str, optional): png/jpg/svg/pdf, default 'png'
+                - theme (str, optional): default/dark/neutral/forest, default 'default'
+                - background_color (str, optional): hex color for background
+                - width (int, optional): image width in pixels
+                - height (int, optional): image height in pixels
+                
+        Yields:
+            ToolInvokeMessage: Blob message with converted image or text message with error
+        """
         try:
-            # 1. Base64 encode the mermaid code
-            encoded_mermaid_code = base64.b64encode(
-                mermaid_code.encode("utf-8")
-            ).decode("utf-8")
+            # PATTERN: Always validate input first
+            mermaid_code = tool_parameters.get("mermaid_code", "").strip()
 
-            # 2. Construct the URL for mermaid.ink
-            format_path = "img"
-            if output_format == "svg":
-                format_path = "svg"
-            elif output_format == "pdf":
-                format_path = "pdf"
-            base_url = f"https://mermaid.ink/{format_path}/{encoded_mermaid_code}"
-            params = {}
-            if theme:
-                params["theme"] = theme
-            if bg_color:
-                params["bg"] = bg_color
-
-            if params:
-                base_url += "?" + urlencode(params)
-
-            logger.info(f"Constructed mermaid.ink URL: {base_url}")
-
-            # 3. Fetch the image
-            response = requests.get(base_url)
-            response.raise_for_status()  # Raise an exception for bad status codes
-
-            image_bytes = response.content
-
-            # 4. Return the generated image file
-            mime_type = "image/png"
-            if output_format == "svg":
-                mime_type = "image/svg+xml"
-            elif output_format == "pdf":
-                mime_type = "application/pdf"
-            yield self.create_blob_message(
-                blob=image_bytes, meta={"mime_type": mime_type}
-            )
-
-        except requests.RequestException as e:
-            logger.error(f"Failed to fetch image from mermaid.ink: {e}", exc_info=True)
-            yield self.create_text_message(
-                f"Failed to fetch image from mermaid.ink: {e}"
-            )
+            # Strip markdown code block fences
+            mermaid_code = mermaid_code.replace("```mermaid", "").replace("```", "").strip()
+            
+            if not mermaid_code:
+                yield self.create_text_message("Error: Mermaid code is required and cannot be empty")
+                return
+            
+            # Extract parameters with defaults
+            output_format = tool_parameters.get("output_format", "png").lower()
+            theme = tool_parameters.get("theme", "default")
+            background_color = tool_parameters.get("background_color", "")
+            width = tool_parameters.get("width")
+            height = tool_parameters.get("height")
+            
+            # Validate output format
+            valid_formats = ["png", "jpg", "jpeg", "svg", "pdf"]
+            if output_format not in valid_formats:
+                yield self.create_text_message(f"Error: Invalid output format '{output_format}'. Supported formats: {', '.join(valid_formats)}")
+                return
+            
+            logger.info(f"Converting Mermaid diagram to {output_format} format")
+            
+            # CRITICAL: Base64 encode the mermaid code
+            try:
+                encoded_diagram = base64.b64encode(mermaid_code.encode('utf-8')).decode('utf-8')
+            except Exception as e:
+                yield self.create_text_message(f"Error: Failed to encode diagram: {str(e)}")
+                return
+            
+            # PATTERN: Build URL based on format
+            url = self._build_api_url(encoded_diagram, output_format, theme, background_color, width, height)
+            
+            logger.info(f"Making request to mermaid.ink API")
+            
+            # CRITICAL: HTTP request with timeout
+            try:
+                response = requests.get(url, timeout=30)
+                
+                if response.status_code != 200:
+                    if response.status_code == 400:
+                        error_msg = f"Invalid Mermaid syntax: {response.text}"
+                    elif response.status_code == 413:
+                        error_msg = "Diagram too large for API"
+                    else:
+                        error_msg = f"Conversion failed: HTTP {response.status_code}"
+                    
+                    logger.error(error_msg)
+                    yield self.create_text_message(error_msg)
+                    return
+                    
+                # PATTERN: Determine mime type based on format
+                mime_types = {
+                    "png": "image/png",
+                    "jpg": "image/jpeg", 
+                    "jpeg": "image/jpeg",
+                    "svg": "image/svg+xml",
+                    "pdf": "application/pdf"
+                }
+                
+                mime_type = mime_types.get(output_format, "image/png")
+                filename = f"mermaid_diagram.{output_format}"
+                
+                # CRITICAL: Return as blob message with proper metadata
+                yield self.create_blob_message(
+                    blob=response.content,
+                    meta={"mime_type": mime_type, "file_name": filename}
+                )
+                
+                logger.info(f"Successfully converted diagram to {output_format} ({len(response.content)} bytes)")
+                
+            except requests.Timeout:
+                error_msg = "Conversion timeout - mermaid.ink took too long to respond"
+                logger.error(error_msg)
+                yield self.create_text_message(error_msg)
+                
+            except requests.ConnectionError as e:
+                error_msg = f"Connection error: Unable to reach mermaid.ink service"
+                logger.error(error_msg)
+                yield self.create_text_message(error_msg)
+                
+            except Exception as e:
+                error_msg = f"Request error: {str(e)}"
+                logger.error(error_msg)
+                yield self.create_text_message(error_msg)
+                
         except Exception as e:
-            logger.error(f"An unexpected error occurred: {e}", exc_info=True)
-            yield self.create_text_message(f"An error occurred: {e}")
+            error_msg = f"Unexpected error during conversion: {str(e)}"
+            logger.error(error_msg)
+            yield self.create_text_message(error_msg)
+    
+    def _build_api_url(self, encoded_diagram: str, output_format: str, theme: str, 
+                      background_color: str, width: int = None, height: int = None) -> str:
+        """
+        Build the mermaid.ink API URL with proper parameters.
+        
+        Args:
+            encoded_diagram: Base64 encoded mermaid code
+            output_format: Target format (png/jpg/svg/pdf)
+            theme: Visual theme
+            background_color: Background color
+            width: Image width
+            height: Image height
+            
+        Returns:
+            Complete API URL with parameters
+        """
+        # GOTCHA: Different endpoints for different formats
+        if output_format == "svg":
+            base_url = f"https://mermaid.ink/svg/{encoded_diagram}"
+        elif output_format == "pdf":
+            base_url = f"https://mermaid.ink/pdf/{encoded_diagram}"
+        else:  # png, jpg, jpeg
+            base_url = f"https://mermaid.ink/img/{encoded_diagram}"
+        
+        # Build query parameters
+        params = []
+        
+        # Format-specific parameters
+        if output_format in ["png", "jpg", "jpeg"]:
+            params.append(f"type={output_format}")
+            
+        # Theme parameter (only for image formats, not SVG/PDF)
+        if theme and theme != "default" and output_format in ["png", "jpg", "jpeg"]:
+            params.append(f"theme={theme}")
+        
+        # Background color parameter
+        if background_color:
+            # Support both hex colors (FF0000) and named colors (!white)
+            if background_color.startswith("!"):
+                params.append(f"bgColor={background_color}")
+            else:
+                # Remove # if present and ensure it's a valid hex color
+                color = background_color.lstrip("#")
+                if len(color) == 6 and all(c in "0123456789ABCDEFabcdef" for c in color):
+                    params.append(f"bgColor={color}")
+        
+        # Size parameters
+        if width:
+            params.append(f"width={width}")
+        if height:
+            params.append(f"height={height}")
+        
+        # Combine URL with parameters
+        if params:
+            return f"{base_url}?{'&'.join(params)}"
+        else:
+            return base_url

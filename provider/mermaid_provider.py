@@ -17,7 +17,6 @@ class MermaidProvider(ToolProvider):
     """
 
     def _validate_credentials(self, credentials: dict[str, Any]) -> None:
-        logger.info("Validating credentials for MermaidProvider.")
         try:
             """
             IMPLEMENT YOUR VALIDATION HERE

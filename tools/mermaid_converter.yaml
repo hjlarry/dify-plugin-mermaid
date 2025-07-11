@@ -3,97 +3,121 @@ identity:
   author: "hjlarry"
   label:
     en_US: "Mermaid Converter"
-    zh_Hans: "Mermaid 转换器"
+    zh_Hans: "Mermaid转换器"
     pt_BR: "Conversor Mermaid"
 description:
   human:
-    en_US: "Renders Mermaid diagram syntax into various formats like PNG, SVG, or PDF."
-    zh_Hans: "将 Mermaid 图表语法渲染成 PNG, SVG, 或 PDF 等多种格式的文件。"
-    pt_BR: "Renderiza a sintaxe do diagrama Mermaid em vários formatos como PNG, SVG ou PDF."
-  llm: "This tool renders Mermaid diagram syntax into a specified format (PNG, SVG, or PDF), with optional theme and background color."
+    en_US: "Convert Mermaid diagram code to images in various formats (PNG, JPG, PDF, SVG)"
+    zh_Hans: "将Mermaid图表代码转换为各种格式的图像（PNG、JPG、PDF、SVG）"
+    pt_BR: "Converte código de diagrama Mermaid para imagens em vários formatos (PNG, JPG, PDF, SVG)"
+  llm: "Convert Mermaid diagram syntax code into visual diagram images with support for multiple output formats and customization options"
 parameters:
   - name: mermaid_code
     type: string
     required: true
     label:
-      en_US: "Mermaid Code"
-      zh_Hans: "Mermaid 代码"
-      pt_BR: "Código Mermaid"
+      en_US: Mermaid Code
+      zh_Hans: Mermaid代码
+      pt_BR: Código Mermaid
     human_description:
-      en_US: "The Mermaid diagram syntax to be rendered."
-      zh_Hans: "需要渲染的 Mermaid 图表语法。"
-      pt_BR: "A sintaxe do diagrama Mermaid a ser renderizada."
-    llm_description: "The user-provided Mermaid diagram syntax that needs to be rendered."
+      en_US: "The Mermaid diagram syntax code to convert to an image"
+      zh_Hans: "要转换为图像的Mermaid图表语法代码"
+      pt_BR: "O código de sintaxe do diagrama Mermaid para converter em imagem"
+    llm_description: "Mermaid diagram syntax code that defines the structure and content of the diagram to be converted to an image"
     form: llm
-  - name: format
+  - name: output_format
     type: select
     required: false
-    default: "png"
-    options:
-      - value: "png"
-        label:
-          en_US: "PNG"
-          zh_Hans: "PNG"
-      - value: "svg"
-        label:
-          en_US: "SVG"
-          zh_Hans: "SVG"
-      - value: "pdf"
-        label:
-          en_US: "PDF"
-          zh_Hans: "PDF"
     label:
-      en_US: "Output Format"
-      zh_Hans: "输出格式"
+      en_US: Output Format
+      zh_Hans: 输出格式
+      pt_BR: Formato de Saída
     human_description:
-      en_US: "The output format for the diagram. Can be png, svg, or pdf."
-      zh_Hans: "图表的输出格式。可以是 png, svg, 或 pdf。"
-    llm_description: "The desired output format for the Mermaid diagram."
+      en_US: "The image format for the output file"
+      zh_Hans: "输出文件的图像格式"
+      pt_BR: "O formato de imagem para o arquivo de saída"
+    llm_description: "Output image format: PNG for general use, JPG for photos, SVG for scalable vector graphics, PDF for documents"
+    options:
+      - value: png
+        label:
+          en_US: PNG
+      - value: jpg
+        label:
+          en_US: JPG
+      - value: svg
+        label:
+          en_US: SVG
+      - value: pdf
+        label:
+          en_US: PDF
+    default: png
     form: form
   - name: theme
     type: select
     required: false
-    default: "default"
-    options:
-      - value: "default"
-        label:
-          en_US: "Default"
-          zh_Hans: "默认"
-      - value: "dark"
-        label:
-          en_US: "Dark"
-          zh_Hans: "暗色"
-      - value: "neutral"
-        label:
-          en_US: "Neutral"
-          zh_Hans: "中性"
-      - value: "forest"
-        label:
-          en_US: "Forest"
-          zh_Hans: "森林"
-      - value: "base"
-        label:
-          en_US: "Base"
-          zh_Hans: "基础"
     label:
-      en_US: "Theme"
-      zh_Hans: "主题"
+      en_US: Theme
+      zh_Hans: 主题
+      pt_BR: Tema
     human_description:
-      en_US: "The theme for the diagram. Available themes: default, dark, neutral, forest, base."
-      zh_Hans: "图表的主题。可用主题: default, dark, neutral, forest, base."
-    llm_description: "The visual theme to apply to the Mermaid diagram."
+      en_US: "Visual theme for the diagram"
+      zh_Hans: "图表的视觉主题"
+      pt_BR: "Tema visual para o diagrama"
+    llm_description: "Visual theme that controls the color scheme and styling of the diagram"
+    options:
+      - value: default
+        label:
+          en_US: Default
+      - value: dark
+        label:
+          en_US: Dark
+      - value: neutral
+        label:
+          en_US: Neutral
+      - value: forest
+        label:
+          en_US: Forest
+    default: default
     form: form
-  - name: bg_color
+  - name: background_color
     type: string
     required: false
     label:
-      en_US: "Background Color"
-      zh_Hans: "背景颜色"
+      en_US: Background Color
+      zh_Hans: 背景颜色
+      pt_BR: Cor de Fundo
     human_description:
-      en_US: "The background color for the diagram (e.g., 'white', '#FFFFFF')."
-      zh_Hans: "图表的背景颜色 (例如, 'white', '#FFFFFF')。"
-    llm_description: "A custom background color for the diagram."
+      en_US: "Background color for the image (hex color code or transparent)"
+      zh_Hans: "图像的背景颜色（十六进制颜色代码或透明）"
+      pt_BR: "Cor de fundo para a imagem (código de cor hexadecimal ou transparente)"
+    llm_description: "Background color as hex code (e.g., FF0000 for red) or named color with ! prefix (e.g., !white)"
+    form: form
+  - name: width
+    type: number
+    required: false
+    label:
+      en_US: Width
+      zh_Hans: 宽度
+      pt_BR: Largura
+    human_description:
+      en_US: "Image width in pixels"
+      zh_Hans: "图像宽度（像素）"
+      pt_BR: "Largura da imagem em pixels"
+    llm_description: "Width of the output image in pixels"
+    form: form
+  - name: height
+    type: number
+    required: false
+    label:
+      en_US: Height
+      zh_Hans: 高度
+      pt_BR: Altura
+    human_description:
+      en_US: "Image height in pixels"
+      zh_Hans: "图像高度（像素）"
+      pt_BR: "Altura da imagem em pixels"
+    llm_description: "Height of the output image in pixels"
     form: form
 extra:
   python:
-    source: tools/mermaid_converter.py 
+    source: tools/mermaid_converter.py
