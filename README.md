@@ -3,7 +3,7 @@
 **Author:** hjlarry  
 **Version:** 0.0.1  
 **Type:** tool  
-**Repo:** https://github.com/hjlarry/dify-plugin-mermaid
+**Repo:** [https://github.com/hjlarry/dify-plugin-mermaid](https://github.com/hjlarry/dify-plugin-mermaid)
 
 ### Description
 
